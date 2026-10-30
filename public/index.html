@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ScentMatch</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=Assistant:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0d0d0f;
+  --surface: #16161a;
+  --surface2: #1e1e24;
+  --border: #2a2a33;
+  --accent: #c9a96e;
+  --accent2: #e8c99a;
+  --fg: #f0eee8;
+  --fg2: #9990a0;
+  --like: #4ade80;
+  --dislike: #f87171;
+  --radius: 20px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: 'Assistant', sans-serif;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  overflow-x: hidden;
+}
+
+/* ── Header ── */
+header {
+  width: 100%;
+  max-width: 480px;
+  padding: 18px 20px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.logo {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.5rem;
+  color: var(--accent);
+  letter-spacing: .05em;
+}
+
+.header-actions { display: flex; gap: 10px; }
+
+.icon-btn {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--fg2);
+  width: 38px; height: 38px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: color .2s, border-color .2s;
+}
+.icon-btn:hover { color: var(--accent); border-color: var(--accent); }
+.icon-btn.active { color: var(--accent); border-color: var(--accent); }
+
+/* ── Filter bar ── */
+.filter-bar {
+  width: 100%;
+  max-width: 480px;
+  padding: 0 20px 14px;
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.filter-bar::-webkit-scrollbar { display: none; }
+
+.chip {
+  flex-shrink: 0;
+  padding: 6px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface2);
+  color: var(--fg2);
+  font-size: .8rem;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all .2s;
+}
+.chip.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #0d0d0f;
+  font-weight: 600;
+}
+
+/* ── Card stack ── */
+.deck-area {
+  width: 100%;
+  max-width: 380px;
+  height: 520px;
+  position: relative;
+  margin: 0 auto;
+}
+
+.card {
+  position: absolute;
+  inset: 0;
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  cursor: grab;
+  user-select: none;
+  touch-action: none;
+  will-change: transform;
+  transition: box-shadow .2s;
+}
+.card:active { cursor: grabbing; }
+.card.back1 { transform: translateY(8px) scale(.97); z-index: 1; }
+.card.back2 { transform: translateY(16px) scale(.94); z-index: 0; }
+.card.top    { z-index: 2; }
+
+/* overlay feedback */
+.vote-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 3.5rem;
+  opacity: 0;
+  transition: opacity .1s;
+  pointer-events: none;
+  border-radius: var(--radius);
+}
+.vote-overlay.like  { background: rgba(74,222,128,.15); color: var(--like); }
+.vote-overlay.nope  { background: rgba(248,113,113,.15); color: var(--dislike); }
+
+/* card image */
+.card-img {
+  width: 100%;
+  height: 320px;
+  object-fit: contain;
+  background: var(--surface2);
+  padding: 24px;
+}
+.card-img-placeholder {
+  width: 100%;
+  height: 320px;
+  background: var(--surface2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 5rem;
+}
+
+.card-info {
+  padding: 16px 20px;
+}
+.card-brand {
+  font-size: .75rem;
+  text-transform: uppercase;
+  letter-spacing: .12em;
+  color: var(--accent);
+  margin-bottom: 4px;
+}
+.card-name {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.25rem;
+  line-height: 1.3;
+  color: var(--fg);
+  margin-bottom: 8px;
+}
+.card-name-en {
+  font-size: .78rem;
+  color: var(--fg2);
+  margin-bottom: 10px;
+  line-height: 1.4;
+}
+.card-footer-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.card-price {
+  font-size: .95rem;
+  font-weight: 600;
+  color: var(--accent2);
+}
+.card-gender-badge {
+  font-size: .7rem;
+  padding: 3px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  color: var(--fg2);
+}
+.card-link {
+  font-size: .75rem;
+  color: var(--accent);
+  text-decoration: none;
+  padding: 4px 0;
+}
+.card-link:hover { text-decoration: underline; }
+
+/* ── Action buttons ── */
+.actions {
+  display: flex;
+  gap: 24px;
+  margin: 20px auto 0;
+  justify-content: center;
+}
+.action-btn {
+  width: 60px; height: 60px;
+  border-radius: 50%;
+  border: 2px solid;
+  background: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  cursor: pointer;
+  transition: transform .15s, background .2s;
+}
+.action-btn:hover { transform: scale(1.12); }
+.action-btn.nope  { border-color: var(--dislike); color: var(--dislike); }
+.action-btn.like  { border-color: var(--like);    color: var(--like); }
+.action-btn.nope:hover  { background: rgba(248,113,113,.15); }
+.action-btn.like:hover  { background: rgba(74,222,128,.15); }
+
+/* ── Liked panel ── */
+.liked-panel {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: var(--bg);
+  z-index: 100;
+  overflow-y: auto;
+  padding: 0 0 40px;
+}
+.liked-panel.open { display: block; }
+
+.panel-header {
+  position: sticky;
+  top: 0;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+  padding: 18px 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  z-index: 10;
+}
+.panel-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.2rem;
+  color: var(--accent);
+  flex: 1;
+}
+
+.liked-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  padding: 16px 16px;
+  max-width: 480px;
+  margin: 0 auto;
+}
+.liked-item {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+}
+.liked-item img {
+  width: 100%;
+  height: 140px;
+  object-fit: contain;
+  background: var(--surface2);
+  padding: 12px;
+}
+.liked-item-info { padding: 10px 12px; }
+.liked-item-brand { font-size: .68rem; text-transform: uppercase; letter-spacing: .1em; color: var(--accent); }
+.liked-item-name { font-size: .85rem; line-height: 1.3; color: var(--fg); margin-top: 2px; }
+.liked-item-price { font-size: .8rem; color: var(--accent2); margin-top: 4px; font-weight: 600; }
+
+/* ── Empty states ── */
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--fg2);
+}
+.empty-state .emoji { font-size: 3rem; margin-bottom: 16px; }
+.empty-state p { font-size: .95rem; line-height: 1.6; }
+
+/* ── Loading ── */
+.loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  gap: 16px;
+  color: var(--fg2);
+}
+.spinner {
+  width: 36px; height: 36px;
+  border: 3px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin .8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<div id="loading" class="loading">
+  <div class="spinner"></div>
+  <p>טוען בשמים מ-April...</p>
+</div>
+
+<div id="app" style="display:none; width:100%; max-width:480px; padding-bottom:20px;">
+
+  <header>
+    <span class="logo">ScentMatch</span>
+    <div class="header-actions">
+      <button class="icon-btn" id="likedBtn" title="מועדפים">♡</button>
+      <button class="icon-btn" id="refreshBtn" title="רענן">↺</button>
+    </div>
+  </header>
+
+  <div class="filter-bar" id="filterBar">
+    <button class="chip active" data-gender="all">הכל</button>
+    <button class="chip" data-gender="F">נשים</button>
+    <button class="chip" data-gender="M">גברים</button>
+  </div>
+
+  <div class="deck-area" id="deckArea"></div>
+
+  <div class="actions">
+    <button class="action-btn nope" id="nopeBtn">✕</button>
+    <button class="action-btn like" id="likeBtn">♥</button>
+  </div>
+
+</div>
+
+<!-- Liked panel -->
+<div class="liked-panel" id="likedPanel">
+  <div class="panel-header">
+    <button class="icon-btn" id="closeLikedBtn">←</button>
+    <span class="panel-title">המועדפים שלי</span>
+    <span id="likedCount" style="color:var(--fg2);font-size:.85rem;"></span>
+  </div>
+  <div class="liked-grid" id="likedGrid"></div>
+</div>
+
+<script>
+const STORAGE_KEY = 'sm_liked_v3';
+const GENDER_LABELS = { F: 'לנשים', M: 'לגברים', U: 'יוניסקס' };
+
+let allPerfumes = [];
+let deck = [];
+let liked = loadLiked();
+let genderFilter = 'all';
+let dragging = false;
+let startX = 0, startY = 0, currentX = 0;
+let activeCard = null;
+
+function loadLiked() {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); } catch { return []; }
+}
+function saveLiked() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(liked)); } catch {}
+}
+
+// ── Fetch perfumes ──
+async function loadPerfumes() {
+  try {
+    const r = await fetch('/api/perfumes');
+    const data = await r.json();
+    if (!data.ok) throw new Error(data.error);
+    allPerfumes = data.perfumes;
+    buildDeck();
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('app').style.display = '';
+    updateLikedBtn();
+  } catch (e) {
+    document.getElementById('loading').innerHTML =
+      `<div style="color:var(--dislike);text-align:center;padding:20px">שגיאה: ${e.message}<br><br><button onclick="loadPerfumes()" style="background:var(--accent);color:#000;border:none;padding:10px 20px;border-radius:8px;cursor:pointer">נסה שוב</button></div>`;
+  }
+}
+
+// ── Deck ──
+function buildDeck() {
+  const likedIds = new Set(liked.map(p => p.id));
+  deck = allPerfumes
+    .filter(p => !likedIds.has(p.id))
+    .filter(p => genderFilter === 'all' || p.gender === genderFilter);
+  renderDeck();
+}
+
+function renderDeck() {
+  const area = document.getElementById('deckArea');
+  area.innerHTML = '';
+  if (!deck.length) {
+    area.innerHTML = `<div class="empty-state"><div class="emoji">🌸</div><p>אין עוד בשמים!<br>נסה לשנות את הפילטר</p></div>`;
+    return;
+  }
+  const top3 = deck.slice(0, 3);
+  top3.reverse().forEach((p, i) => {
+    const cls = i === 0 ? 'back2' : i === 1 ? 'back1' : 'top';
+    area.appendChild(createCard(p, cls));
+  });
+  attachDrag(area.querySelector('.card.top'));
+}
+
+function createCard(p, cls) {
+  const card = document.createElement('div');
+  card.className = `card ${cls}`;
+  card.dataset.id = p.id;
+
+  const imgHtml = p.imageUrl
+    ? `<img class="card-img" src="${p.imageUrl}" alt="${escHtml(p.nameEn)}" onerror="this.outerHTML='<div class=&quot;card-img-placeholder&quot;>🌸</div>'">`
+    : `<div class="card-img-placeholder">🌸</div>`;
+
+  const priceHtml = p.price ? `<span class="card-price">₪${Math.round(p.price)}</span>` : '';
+  const genderLabel = GENDER_LABELS[p.gender] || '';
+
+  card.innerHTML = `
+    <div class="vote-overlay like">♥</div>
+    <div class="vote-overlay nope">✕</div>
+    ${imgHtml}
+    <div class="card-info">
+      <div class="card-brand">${escHtml(p.brand)}</div>
+      <div class="card-name">${escHtml(p.name)}</div>
+      <div class="card-name-en">${escHtml(p.nameEn !== p.name ? p.nameEn : '')}</div>
+      <div class="card-footer-row">
+        ${priceHtml}
+        <span class="card-gender-badge">${genderLabel}</span>
+      </div>
+      ${p.productUrl ? `<a class="card-link" href="${p.productUrl}" target="_blank">ראה באפריל ↗</a>` : ''}
+    </div>
+  `;
+  return card;
+}
+
+function escHtml(s) {
+  return (s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── Drag / swipe ──
+function attachDrag(card) {
+  if (!card) return;
+  card.addEventListener('pointerdown', onDown);
+}
+
+function onDown(e) {
+  if (e.target.tagName === 'A') return;
+  activeCard = e.currentTarget;
+  dragging = true;
+  startX = e.clientX;
+  startY = e.clientY;
+  currentX = 0;
+  activeCard.setPointerCapture(e.pointerId);
+  activeCard.addEventListener('pointermove', onMove);
+  activeCard.addEventListener('pointerup', onUp);
+}
+
+function onMove(e) {
+  if (!dragging) return;
+  currentX = e.clientX - startX;
+  const rotate = currentX * 0.08;
+  activeCard.style.transform = `translateX(${currentX}px) rotate(${rotate}deg)`;
+  activeCard.style.transition = 'none';
+
+  const likeOv = activeCard.querySelector('.vote-overlay.like');
+  const nopeOv = activeCard.querySelector('.vote-overlay.nope');
+  if (currentX > 40) { likeOv.style.opacity = Math.min(currentX / 100, 1); nopeOv.style.opacity = 0; }
+  else if (currentX < -40) { nopeOv.style.opacity = Math.min(-currentX / 100, 1); likeOv.style.opacity = 0; }
+  else { likeOv.style.opacity = 0; nopeOv.style.opacity = 0; }
+}
+
+function onUp(e) {
+  if (!dragging) return;
+  dragging = false;
+  activeCard.removeEventListener('pointermove', onMove);
+  activeCard.removeEventListener('pointerup', onUp);
+
+  const threshold = 100;
+  if (currentX > threshold) swipe('like');
+  else if (currentX < -threshold) swipe('nope');
+  else {
+    activeCard.style.transition = 'transform .4s cubic-bezier(.25,.46,.45,.94)';
+    activeCard.style.transform = '';
+    activeCard.querySelector('.vote-overlay.like').style.opacity = 0;
+    activeCard.querySelector('.vote-overlay.nope').style.opacity = 0;
+  }
+}
+
+function swipe(dir) {
+  if (!deck.length) return;
+  const p = deck[0];
+  const card = document.getElementById('deckArea').querySelector('.card.top');
+  if (!card) return;
+
+  const tx = dir === 'like' ? window.innerWidth : -window.innerWidth;
+  card.style.transition = 'transform .4s ease, opacity .4s';
+  card.style.transform = `translateX(${tx}px) rotate(${dir === 'like' ? 20 : -20}deg)`;
+  card.style.opacity = '0';
+
+  if (dir === 'like') {
+    liked.push(p);
+    saveLiked();
+    updateLikedBtn();
+  }
+
+  deck.shift();
+  setTimeout(() => renderDeck(), 380);
+}
+
+// ── Liked panel ──
+function openLiked() {
+  const panel = document.getElementById('likedPanel');
+  const grid = document.getElementById('likedGrid');
+  panel.classList.add('open');
+  document.getElementById('likedCount').textContent = `${liked.length} בשמים`;
+
+  if (!liked.length) {
+    grid.innerHTML = `<div class="empty-state" style="grid-column:span 2"><div class="emoji">🌸</div><p>עדיין לא אהבת בשמים.<br>התחל לסווייפ!</p></div>`;
+    return;
+  }
+  grid.innerHTML = liked.map(p => `
+    <div class="liked-item">
+      <img src="${p.imageUrl}" alt="${escHtml(p.nameEn)}" onerror="this.style.display='none'">
+      <div class="liked-item-info">
+        <div class="liked-item-brand">${escHtml(p.brand)}</div>
+        <div class="liked-item-name">${escHtml(p.name)}</div>
+        ${p.price ? `<div class="liked-item-price">₪${Math.round(p.price)}</div>` : ''}
+        ${p.productUrl ? `<a href="${p.productUrl}" target="_blank" style="font-size:.72rem;color:var(--accent);text-decoration:none;">ראה באפריל ↗</a>` : ''}
+      </div>
+    </div>
+  `).join('');
+}
+
+function updateLikedBtn() {
+  const btn = document.getElementById('likedBtn');
+  btn.textContent = liked.length ? `♥ ${liked.length}` : '♡';
+  btn.classList.toggle('active', liked.length > 0);
+}
+
+// ── Events ──
+document.getElementById('likedBtn').addEventListener('click', openLiked);
+document.getElementById('closeLikedBtn').addEventListener('click', () => {
+  document.getElementById('likedPanel').classList.remove('open');
+});
+
+document.getElementById('likeBtn').addEventListener('click', () => swipe('like'));
+document.getElementById('nopeBtn').addEventListener('click', () => swipe('nope'));
+
+document.getElementById('refreshBtn').addEventListener('click', async () => {
+  const btn = document.getElementById('refreshBtn');
+  btn.style.opacity = '.5';
+  await fetch('/api/refresh');
+  await loadPerfumes();
+  btn.style.opacity = '';
+});
+
+document.getElementById('filterBar').addEventListener('click', e => {
+  const chip = e.target.closest('.chip');
+  if (!chip) return;
+  document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+  chip.classList.add('active');
+  genderFilter = chip.dataset.gender;
+  buildDeck();
+});
+
+// Keyboard
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === 'l') swipe('like');
+  if (e.key === 'ArrowLeft' || e.key === 'n') swipe('nope');
+});
+
+loadPerfumes();
+</script>
+</body>
+</html>
