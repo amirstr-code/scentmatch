@@ -136,5 +136,5 @@ app.get('/api/refresh', async (req, res) => {
   }
 });
 
-const PORT = 3033;
+const PORT = process.env.PORT || 3033;
 app.listen(PORT, () => console.log(`[ScentMatch] http://localhost:${PORT}`));
